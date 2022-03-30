@@ -11,5 +11,5 @@
 
 ### Tài liệu của nhóm
 - Kế hoạch nhóm, phân chia công việc: [Trello](https://trello.com/b/0mcVqLC8/parallel-programming-2022)
-- Link Colab thực thi: [Google Colab](https://colab.research.google.com/drive/1BjtmnOHzZa2qgpUJvKI06FfmLIvlSppz?usp=sharing)
+- Report: [Google Colab](https://colab.research.google.com/drive/1BjtmnOHzZa2qgpUJvKI06FfmLIvlSppz?usp=sharing)
 - Drive làm việc chung: [Google Drive]
