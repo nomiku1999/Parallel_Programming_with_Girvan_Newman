@@ -5,8 +5,8 @@
 ### STT: Nhóm 1
 
 ### Thành viên:
-1. 1712892 - Nguyễn Thị Tuyết - [kenneth-nguyenn](https://github.com/kenneth-nguyenn)
-2. 1712284 - Hoàng Gia Bảo - [chnhgr](https://github.com/chnhgr)
+1. 1712892 - Nguyễn Thị Tuyết - [kenneth-nguyenn]
+2. 1712284 - Hoàng Gia Bảo - [chnhgr](https://github.com/hgbao8799)
 3. 1712685 - Trần Huy Phượng - [nomiku1999](https://github.com/nomiku1999)
 
 ### Tài liệu của nhóm
