@@ -5,7 +5,7 @@
 ### STT: Nhóm 1
 
 ### Thành viên:
-1. 1712892 - Nguyễn Thị Tuyết - [kenneth-nguyenn]
+1. 1712892 - Nguyễn Thị Tuyết - (Đang bệnh)
 2. 1712284 - Hoàng Gia Bảo - [chnhgr](https://github.com/hgbao8799)
 3. 1712685 - Trần Huy Phượng - [nomiku1999](https://github.com/nomiku1999)
 
