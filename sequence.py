@@ -11,7 +11,7 @@ bet = [[0 for i in range(vertices)] for i in range(vertices)]
 
 def bfs(x : int):
     visited = [False for i in range(vertices)] # marked visited
-    level = [1e9 for i in range(vertices)] # level of each vertices
+    level = [123456789 for i in range(vertices)] # level of each vertices
     parents = [0 for i in range(vertices)] # number of parent lv = lv-1
     point = [1 for i in range(vertices)] # point of each vertices
     q = Queue() # put/ get/ empty
@@ -31,7 +31,9 @@ def bfs(x : int):
 
     lv = [[] for i in range(maxlv + 1)]
     for i in range(vertices):
-        lv[level[i]].append(i)
+        idx = int(level[i])
+        if idx != 123456789:
+            lv[idx].append(i)
     
     for lvleaf in range(maxlv, 0, -1):
         for leaf in lv[lvleaf]:

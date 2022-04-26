@@ -49,9 +49,10 @@ def bfs(x : int, g : np.array, bet : np.array):
     lv = np.empty((maxlv + 1, vertices), dtype=int)
     sizeOfLv = np.zeros(maxlv + 1, dtype=int)
     for i in range(vertices):
-        newPosition = sizeOfLv[level[i]]
-        lv[level[i]][newPosition] = i
-        sizeOfLv[level[i]] += 1
+        if level[i] != 12345:
+            newPosition = sizeOfLv[level[i]]
+            lv[level[i]][newPosition] = i
+            sizeOfLv[level[i]] += 1
 
     # print(lv)
     # print(sizeOfLv)
