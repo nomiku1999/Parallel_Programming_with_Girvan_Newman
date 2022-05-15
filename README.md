@@ -9,6 +9,6 @@
 2. 1712685 - Trần Huy Phượng - [nomiku1999](https://github.com/nomiku1999)
 
 ### Tài liệu của nhóm
-- Kế hoạch nhóm, phân chia công việc: [Trello](https://trello.com/b/0mcVqLC8/parallel-programming-2022)
+- Kế hoạch nhóm, phân chia công việc: [Google Sheet](https://docs.google.com/spreadsheets/d/1soD7PPQrFbnzBDzgBHKMfFROQThPKNwnT4g7xycg0iE/edit?usp=sharing)
 - Report: [Google Colab](https://colab.research.google.com/github/nomiku1999/Parallel_Programming_with_Girvan_Newman/blob/main/Report.ipynb)
 - Drive làm việc chung: [Google Drive]
