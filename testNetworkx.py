@@ -189,5 +189,5 @@ f.close()
 # TESTING
 
 G = nx.Graph(g)
-cbc = nx.edge_betweenness_centrality(G, normalized=True)
+cbc = nx.edge_betweenness_centrality(G, normalized=False)
 print([f"{node} {cbc[node]:0.2f}" for node in sorted(cbc)])
