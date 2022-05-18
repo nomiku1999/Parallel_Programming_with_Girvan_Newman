@@ -21,7 +21,7 @@ def bfs(x : int):
         u = q.get()
         for v in g[u]:
             if level[v] + 1 == level[u]: # meet your parent vertices
-                parents[u] += 1
+                parents[u] += parents[v]
                 continue
             if not visited[v]: # meet new vertices
                 visited[v] = True
@@ -39,11 +39,10 @@ def bfs(x : int):
         for leaf in lv[lvleaf]:
             for parent in g[leaf]:                
                 if level[parent] + 1 == lvleaf:
-                    bet[parent][leaf] += point[leaf] / parents[leaf]
-                    bet[leaf][parent] += point[leaf] / parents[leaf]
-                    point[parent] += point[leaf] / parents[leaf]
+                    bet[parent][leaf] += point[leaf] / parents[leaf] * parents[parent]
+                    bet[leaf][parent] += point[leaf] / parents[leaf] * parents[parent]
+                    point[parent] += point[leaf] / parents[leaf] * parents[parent]
 
-normalizationFactor = vertices ** 2 - vertices + 1 # C=(n-1)^{2}-(n-1)
 resBet = []
 
 def betweenness():
@@ -53,7 +52,7 @@ def betweenness():
         for j in range(vertices):
             if j < i: continue
             if bet[i][j]: 
-                bet[i][j] *= (2 / (vertices * (vertices - 1)))
+                # bet[i][j] *= (2 / (vertices * (vertices - 1)))
                 bet[i][j] /= 2
                 # print(f"({i}, {j}) {bet[i][j]:0.2f}")
                 resBet.append(f"({i}, {j}) {bet[i][j]:0.2f}")
