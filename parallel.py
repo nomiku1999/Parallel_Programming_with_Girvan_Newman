@@ -163,11 +163,11 @@ def bfs(start):
 for i in range(numVertices):
     bfs(i)
 
-
+resBet = []
 for i in range(numVertices):
     for j in range(neighborsPerVertex):
         id = i * neighborsPerVertex + j
         if edgeArray[id] != INF:
             if(bet[id] != 0):
-                print(f"({i}, {edgeArray[id]}) {bet[id]:0.2f}")
-# (0, 1) 638.07', '(0, 3) 1400.88', '(0, 5) 170.34', '(0, 9) 387.88', '(0, 11) 189.00'
+                resBet.append(f"({i}, {edgeArray[id]}) {bet[id]:0.2f}")
+print(resBet)
