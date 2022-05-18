@@ -62,7 +62,6 @@ def bfs1(q, g, level, parents, visited, start):
 
 @numba.jit(nopython=True)
 def bfs2(g, lv, sizeOfLv, level, parents, point, bet):
-
     maxlv = 0
     for i in range(vertices):
         if level[i] != INF:
@@ -94,7 +93,6 @@ def bfs2(g, lv, sizeOfLv, level, parents, point, bet):
 
 resBet = []
 
-
 def betweenness():
     # bfs(0, g, bet)
     for i in range(vertices):
@@ -105,8 +103,8 @@ def betweenness():
                 continue
             if bet[i][j]:
                 bet[i][j] /= 2
+                bet[j][i] = bet[i][j]
                 resBet.append(f"({i}, {j}) {bet[i][j]:0.2f}")
-
 
 betweenness()
 # bet
