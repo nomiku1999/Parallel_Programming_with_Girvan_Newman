@@ -54,6 +54,7 @@ def betweenness():
             if bet[i][j]: 
                 # bet[i][j] *= (2 / (vertices * (vertices - 1)))
                 bet[i][j] /= 2
+                bet[j][i] = bet[i][j]
                 # print(f"({i}, {j}) {bet[i][j]:0.2f}")
                 resBet.append(f"({i}, {j}) {bet[i][j]:0.2f}")
 
