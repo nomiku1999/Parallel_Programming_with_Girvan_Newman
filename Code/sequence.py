@@ -7,6 +7,11 @@ g = []
 for i in range(vertices):
     g.append(list(map(int, f.readline().split())))
 f.close()
+
+# noEdges = 0
+# for i in range(len(g)):
+#     noEdges += len(g[i])
+# print(noEdges / 2)
 bet = [[0 for i in range(vertices)] for i in range(vertices)]
 
 def bfs(x : int):
@@ -48,6 +53,7 @@ resBet = []
 def betweenness():
     for i in range(vertices):
         bfs(i)
+        
     for i in range(vertices):
         for j in range(vertices):
             if j < i: continue
