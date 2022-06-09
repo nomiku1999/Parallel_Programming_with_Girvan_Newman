@@ -170,4 +170,4 @@ for i in range(numVertices):
         if edgeArray[id] != INF:
             if(bet[id] != 0):
                 resBet.append(f"({i}, {edgeArray[id]}) {bet[id]:0.2f}")
-print(resBet)
+print(resBet[:50])

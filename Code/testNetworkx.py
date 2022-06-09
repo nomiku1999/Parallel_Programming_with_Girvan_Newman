@@ -190,4 +190,10 @@ f.close()
 
 G = nx.Graph(g)
 cbc = nx.edge_betweenness_centrality(G, normalized=False)
-print([f"{node} {cbc[node]:0.2f}" for node in sorted(cbc)])
+
+cnt = 0
+for node in sorted(cbc):
+    if cnt == 50:
+        break
+    print([f"{node} {cbc[node]:0.2f}"])
+    cnt += 1

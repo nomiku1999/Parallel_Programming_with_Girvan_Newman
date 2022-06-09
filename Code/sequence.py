@@ -66,4 +66,4 @@ def betweenness():
 
 betweenness()
 # bet
-print(resBet)
+print(resBet[:50])

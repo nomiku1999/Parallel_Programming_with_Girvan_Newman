@@ -2,7 +2,7 @@ from numba import cuda, jit, prange
 import numpy as np
 import math
 
-INF = 123456789
+INF = -123456789
 BLOCK_SIZE = 32
 f = open("graph.txt", "r")
 numVertices = int(f.readline())
@@ -29,7 +29,6 @@ for i in range(numVertices):
 def bfs_kernel1(parent, visited, que, newque, edgeArray, numVertices, neighborsPerVertex):
     tIdx = cuda.grid(1)
     if tIdx < numVertices:
-
         if que[tIdx] == True:
             startEdges, endEdges = tIdx * \
                 neighborsPerVertex, (tIdx + 1) * neighborsPerVertex
@@ -107,83 +106,116 @@ def bfs_kernel5(que, level, numVertices, currentLevel):
         if level[tIdx] == currentLevel:
             que[tIdx] = True
 
+@cuda.jit
+def restoreToDefault_kernel(level, parent, visited, que, newque, startVertice, numVertices):
+    tIdx = cuda.grid(1)
+    if tIdx < numVertices:
+        level[tIdx] = INF 
+        parent[tIdx] = 0.0
+        visited[tIdx] = False
+        que[tIdx] = False
+        newque[tIdx] = False
+        if (tIdx == startVertice):
+            level[tIdx] = 0
+            parent[tIdx] = 1
+            que[tIdx] = True
+
+@cuda.jit
+def restoreVisitedAndQue_kernel(visited, que, numVertices):
+    tIdx = cuda.grid(1)
+    if tIdx < numVertices:
+        visited[tIdx] = False
+        que[tIdx] = False
+
+@cuda.jit
+def fillPointArrWithOnes_kernel(point, numVertices):
+    tIdx = cuda.grid(1)
+    if tIdx < numVertices:
+        point[tIdx] = 1
+
+@cuda.jit
+def setQueInMaxLevel_kernel(que, level, numVertices, maxLevel):
+    tIdx = cuda.grid(1)
+    if tIdx < numVertices:
+        if level[tIdx] == maxLevel[0]:
+            que[tIdx] = True
+
+@cuda.jit
+def findMaxVal_kernel(level, maxLevel):
+    tIdx = cuda.grid(1)
+    cuda.atomic.max(maxLevel, 0, level[tIdx])
+
 bet = np.zeros(numEdges, dtype=float)
 d_bet = cuda.to_device(bet)
 d_edgeArray = cuda.to_device(edgeArray)
 
-def bfs(start):
-    # đưa mọi mảng này làm mảng toàn cục hết, copy vô device sử dụng luôn, ko copy ra host sau mỗi lần bfs
-    # viết hàm kernel reset tất cả 5 mảng dưới về giá trị mặc định lúc khởi tạo sau mỗi lần bfs
-    # --> đỡ tốn thời gian copy trong mỗi lần bfs tại 1 đỉnh
-    level = np.empty(numVertices, dtype=int); level.fill(INF)
-    parent = np.zeros(numVertices, dtype=float)
-    visited = np.zeros(numVertices, dtype=bool)
-    que = np.zeros(numVertices, dtype=bool)
-    newque = np.zeros(numVertices, dtype=bool)
-    
-    GRID_SIZE = int(math.ceil(numVertices / BLOCK_SIZE))
-    que[start] = True
-    parent[start] = 1
-    level[start] = 0
-    currentLevel1 = 0
+# đưa mọi mảng này làm mảng toàn cục hết, copy vô device sử dụng luôn, ko copy ra host sau mỗi lần bfs
+# viết hàm kernel reset tất cả 5 mảng dưới về giá trị mặc định lúc khởi tạo sau mỗi lần bfs
+# --> đỡ tốn thời gian copy trong mỗi lần bfs tại 1 đỉnh
+level = np.empty(numVertices, dtype=int)
+parent = np.zeros(numVertices, dtype=float)
+visited = np.zeros(numVertices, dtype=bool)
+que = np.zeros(numVertices, dtype=bool)
+newque = np.zeros(numVertices, dtype=bool)
+point = np.empty(numVertices, dtype=float)
 
-    d_parent = cuda.to_device(parent)
-    d_level = cuda.to_device(level)
-    d_visited = cuda.to_device(visited)
-    d_que = cuda.to_device(que)
-    d_newque = cuda.to_device(newque)
+# this use pageable bandwidth, we should use pinned memory to store all of this array
+# to boost data transfer time between host and device
+d_level = cuda.to_device(level)
+d_parent = cuda.to_device(parent)
+d_visited = cuda.to_device(visited)
+d_que = cuda.to_device(que)
+d_newque = cuda.to_device(newque)
+d_point = cuda.to_device(point)
+
+GRID_SIZE = int(math.ceil(numVertices / BLOCK_SIZE))
+
+def bfs(start):
+    # write kernel to restart level, parent, visited, que, newque to default 
+    # before using 5 bfs kernel below
+    global d_level
+    global d_parent
+    global d_visited
+    global d_que
+    global d_newque
+    global d_point
+
+    restoreToDefault_kernel[GRID_SIZE, BLOCK_SIZE](
+        d_level, d_parent, d_visited, d_que, d_newque, start, numVertices)
+
+    currentLevel1 = 0
     while currentLevel1 < 15: # TODO: replace 15 with the condition - reach all the node
         bfs_kernel1[GRID_SIZE, BLOCK_SIZE](
             d_parent, d_visited, d_que, d_newque, d_edgeArray, numVertices, neighborsPerVertex)
-        cuda.synchronize()
 
         bfs_kernel2[GRID_SIZE, BLOCK_SIZE](
             d_level, d_visited, d_que, d_newque, numVertices, currentLevel1)
-        cuda.synchronize()
 
         currentLevel1 += 1
 
-    #  DONT copy anything here
-    # for visited, findMaxLevel you can make other kernel to reset or just make new visited 
-    d_level.copy_to_host(level)
-    d_visited.copy_to_host(visited)
-    d_que.copy_to_host(que)
-    que.fill(False)
-    visited.fill(False)
+    restoreVisitedAndQue_kernel[GRID_SIZE, BLOCK_SIZE](d_visited, d_que, numVertices)
     
-    # Try t
-    maxLevel = 0
-    for i in range(numVertices):
-        if level[i] != INF:
-            maxLevel = max(maxLevel, level[i])
+    maxLevel = np.zeros(1, dtype=int)
+    d_maxLevel = cuda.to_device(maxLevel)
+    findMaxVal_kernel[GRID_SIZE, BLOCK_SIZE](d_level, d_maxLevel)
 
-    for i in range(numVertices):
-        if level[i] == maxLevel:
-            que[i] = True
+    setQueInMaxLevel_kernel[GRID_SIZE, BLOCK_SIZE](d_que, d_level, numVertices, d_maxLevel)
 
-    currentLevel2 = maxLevel
+    d_maxLevel.copy_to_host(maxLevel)
+    currentLevel2 = maxLevel[0]
 
-    point = np.empty(numVertices, dtype=float)
-    point.fill(1)
-    d_point = cuda.to_device(point)
-    d_level = cuda.to_device(level)
-    d_visited = cuda.to_device(visited)
-    d_que = cuda.to_device(que)
-
+    fillPointArrWithOnes_kernel[GRID_SIZE, BLOCK_SIZE](d_point, numVertices)
+    
     while currentLevel2 >= 0:
         bfs_kernel3[GRID_SIZE, BLOCK_SIZE](
             d_bet, d_point, d_parent, d_level, d_visited, d_que, d_edgeArray, numVertices, neighborsPerVertex, currentLevel2)
-        cuda.synchronize()
         currentLevel2 -= 1
 
         bfs_kernel4[GRID_SIZE, BLOCK_SIZE](
                 d_que, d_visited, numVertices)
-        cuda.synchronize()
-
 
         bfs_kernel5[GRID_SIZE, BLOCK_SIZE](
                 d_que, d_level, numVertices, currentLevel2)
-        cuda.synchronize()
 
 for i in range(numVertices):
     bfs(i)
