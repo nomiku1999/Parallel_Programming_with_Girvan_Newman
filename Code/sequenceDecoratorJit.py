@@ -32,8 +32,8 @@ def bfs(start, g, bet):
 
     bfs1(q, g, level, parents, visited, start)
 
-    lv = np.empty((15, vertices), dtype=int)
-    sizeOfLv = np.zeros(15, dtype=int)
+    lv = np.empty((vertices + 1, vertices), dtype=int)
+    sizeOfLv = np.zeros(vertices + 1, dtype=int)
     bfs2(g, lv, sizeOfLv, level, parents, point, bet)
 
 

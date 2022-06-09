@@ -124,7 +124,7 @@ def bfs(start):
     level[start] = 0
 
     currentLevel1 = 0
-    while currentLevel1 < 15:
+    while currentLevel1 < 25:
         bfs_kernel1[GRID_SIZE, BLOCK_SIZE](
             parent, visited, que, newque, edgeArray, numVertices, neighborsPerVertex)
         cuda.synchronize()

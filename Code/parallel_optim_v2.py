@@ -184,7 +184,7 @@ def bfs(start):
         d_level, d_parent, d_visited, d_que, d_newque, start, numVertices)
 
     currentLevel1 = 0
-    while currentLevel1 < 15: # TODO: replace 15 with the condition - reach all the node
+    while currentLevel1 < 25: # TODO: replace 15 with the condition - reach all the node
         bfs_kernel1[GRID_SIZE, BLOCK_SIZE](
             d_parent, d_visited, d_que, d_newque, d_edgeArray, numVertices, neighborsPerVertex)
 
