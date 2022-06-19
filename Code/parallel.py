@@ -25,7 +25,7 @@ for i in range(numVertices):
 
 
 @cuda.jit
-def bfs_kernel1(parent, visited, que, newque, edgeArray, numVertices, neighborsPerVertex):
+def levelAndParent_Kernel(parent, visited, que, newque, edgeArray, numVertices, neighborsPerVertex):
     tIdx = cuda.grid(1)
 
     if tIdx < numVertices:
@@ -50,7 +50,7 @@ def bfs_kernel1(parent, visited, que, newque, edgeArray, numVertices, neighborsP
 
 
 @cuda.jit
-def bfs_kernel2(level, parent, visited, que, newque, edgeArray, numVertices, neighborsPerVertex, currentLevel):
+def putInQueue_Kernel(level, parent, visited, que, newque, edgeArray, numVertices, neighborsPerVertex, currentLevel):
     tIdx = cuda.grid(1)
 
     if tIdx < numVertices:
@@ -66,7 +66,7 @@ def bfs_kernel2(level, parent, visited, que, newque, edgeArray, numVertices, nei
 
 
 @cuda.jit
-def bfs_kernel3(bet, point, parent, level, visited, que, edgeArray, numVertices, neighborsPerVertex, currentLevel):
+def countBetweenness_Kernel(bet, point, parent, level, visited, que, edgeArray, numVertices, neighborsPerVertex, currentLevel):
     tIdx = cuda.grid(1)
 
     if tIdx < numVertices:
@@ -84,13 +84,14 @@ def bfs_kernel3(bet, point, parent, level, visited, que, edgeArray, numVertices,
                 if que[visitVertice] == False:
                     # visit parent
                     if visited[visitVertice] == False and level[visitVertice] == currentLevel - 1:
-                        updatePoint = (point[tIdx] / parent[tIdx]) * parent[visitVertice]
+                        updatePoint = (
+                            point[tIdx] / parent[tIdx]) * parent[visitVertice]
                         cuda.atomic.add(bet, edge, updatePoint)
                         cuda.atomic.add(point, visitVertice, updatePoint)
 
 
 @cuda.jit
-def bfs_kernel4(que, visited, edgeArray, numVertices):
+def markVisited_Kernel(que, visited, edgeArray, numVertices):
     tIdx = cuda.grid(1)
 
     if tIdx < numVertices:
@@ -100,18 +101,20 @@ def bfs_kernel4(que, visited, edgeArray, numVertices):
 
 
 @cuda.jit
-def bfs_kernel5(que, level, edgeArray, numVertices, currentLevel):
+def putLowerLevel_Kernel(que, level, edgeArray, numVertices, currentLevel):
     tIdx = cuda.grid(1)
 
     if tIdx < numVertices:
         if level[tIdx] == currentLevel:
             que[tIdx] = True
 
+
 bet = np.zeros(numEdges, dtype=float)
 
 
 def bfs(start):
-    level = np.empty(numVertices, dtype=int); level.fill(INF)
+    level = np.empty(numVertices, dtype=int)
+    level.fill(INF)
     parent = np.zeros(numVertices, dtype=float)
     visited = np.zeros(numVertices, dtype=bool)
     que = np.zeros(numVertices, dtype=bool)
@@ -125,10 +128,10 @@ def bfs(start):
 
     currentLevel1 = 0
     while currentLevel1 < 25:
-        bfs_kernel1[GRID_SIZE, BLOCK_SIZE](
+        levelAndParent_Kernel[GRID_SIZE, BLOCK_SIZE](
             parent, visited, que, newque, edgeArray, numVertices, neighborsPerVertex)
         cuda.synchronize()
-        bfs_kernel2[GRID_SIZE, BLOCK_SIZE](
+        putInQueue_Kernel[GRID_SIZE, BLOCK_SIZE](
             level, parent, visited, que, newque, edgeArray, numVertices, neighborsPerVertex, currentLevel1)
         currentLevel1 += 1
 
@@ -149,16 +152,17 @@ def bfs(start):
     currentLevel2 = maxLevel
 
     while currentLevel2 >= 0:
-        bfs_kernel3[GRID_SIZE, BLOCK_SIZE](
+        countBetweenness_Kernel[GRID_SIZE, BLOCK_SIZE](
             bet, point, parent, level, visited, que, edgeArray, numVertices, neighborsPerVertex, currentLevel2)
         cuda.synchronize()
         currentLevel2 -= 1
-        bfs_kernel4[GRID_SIZE, BLOCK_SIZE](
-                que, visited, edgeArray, numVertices)
+        markVisited_Kernel[GRID_SIZE, BLOCK_SIZE](
+            que, visited, edgeArray, numVertices)
         cuda.synchronize()
-        bfs_kernel5[GRID_SIZE, BLOCK_SIZE](
-                que, level, edgeArray, numVertices, currentLevel2)
+        putLowerLevel_Kernel[GRID_SIZE, BLOCK_SIZE](
+            que, level, edgeArray, numVertices, currentLevel2)
         cuda.synchronize()
+
 
 for i in range(numVertices):
     bfs(i)
@@ -170,4 +174,5 @@ for i in range(numVertices):
         if edgeArray[id] != INF:
             if(bet[id] != 0):
                 resBet.append(f"({i}, {edgeArray[id]}) {bet[id]:0.2f}")
+
 print(resBet[:50])
