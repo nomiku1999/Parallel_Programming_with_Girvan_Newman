@@ -32,9 +32,10 @@ def bfs(start, g, bet):
 
     bfs1(q, g, level, parents, visited, start)
 
-    lv = np.empty((vertices + 1, vertices), dtype=int)
-    sizeOfLv = np.zeros(vertices + 1, dtype=int)
-    bfs2(g, lv, sizeOfLv, level, parents, point, bet)
+    visited = np.zeros(vertices, dtype=int)
+    # lv = np.empty((vertices + 1, vertices), dtype=int)
+    # sizeOfLv = np.zeros(vertices + 1, dtype=int)
+    bfs2(q, g, level, parents, point, bet, visited)
 
 
 @numba.jit(nopython=True)
@@ -61,37 +62,40 @@ def bfs1(q, g, level, parents, visited, start):
 
 
 @numba.jit(nopython=True)
-def bfs2(g, lv, sizeOfLv, level, parents, point, bet):
+def bfs2(q, g, level, parents, point, bet, visited):
     maxlv = 0
     for i in range(vertices):
         if level[i] != INF:
-            newPosition = sizeOfLv[level[i]]
-            lv[level[i]][newPosition] = i
-            sizeOfLv[level[i]] += 1
             if maxlv < level[i]:
                 maxlv = level[i]
+    cnt = 0
+    while cnt < 15 and maxlv > 0:
+        l, r = 0, 0
+        for i in range(vertices):
+            if level[i] == maxlv and not visited[i]:
+                q[r] = i
+                visited[i] = 1
+                r += 1
 
-    for leafLevel in range(maxlv, 0, -1):
-        for leafIndex in range(sizeOfLv[leafLevel]):  # lv[lvleaf]:
-            # leaf vertices if lv[leaf]
-            leaf = lv[leafLevel][leafIndex]
+        while l < r:
+            leaf = q[l]
+            l += 1       # pop operator
+            for vindex in range(sizeOfG[leaf]):
+                parent = g[leaf][vindex]
+                if level[parent] + 1 == level[leaf]:  # meet your parent vertices
+                    gainPoint = (point[leaf] / parents[leaf]) * parents[parent]
+                    bet[parent][leaf] += gainPoint
+                    bet[leaf][parent] += gainPoint
+                    point[parent] += gainPoint
 
-            for connectedNodeIndex in range(sizeOfG[leaf]):
-                node = g[leaf][connectedNodeIndex]
-                if level[node] + 1 == leafLevel:
-                    if parents[leaf] == 0:
-                        continue
-                    # print("parent, leaf: ", node, leaf)
-                    # print("point parent", point[leaf], parents[leaf])
-                    gainPoint = point[leaf] / parents[leaf] * parents[node]
-                    bet[node][leaf] += gainPoint
-                    bet[leaf][node] += gainPoint
-                    point[node] += gainPoint
-                    # print("Bet", bet[leaf][node], bet[node][leaf])
-                    # print("point", point[node])
+                    # updatePoint = (point[tIdx] / parent[tIdx]) * parent[visitVertice]
+                    # cuda.atomic.add(bet, edge, updatePoint)
+                    # cuda.atomic.add(point, visitVertice, updatePoint)
+        maxlv -= 1
 
 
 resBet = []
+
 
 def betweenness():
     # bfs(0, g, bet)
@@ -105,6 +109,7 @@ def betweenness():
                 bet[i][j] /= 2
                 bet[j][i] = bet[i][j]
                 resBet.append(f"({i}, {j}) {bet[i][j]:0.2f}")
+
 
 betweenness()
 # bet
