@@ -192,8 +192,20 @@ G = nx.Graph(g)
 cbc = nx.edge_betweenness_centrality(G, normalized=False)
 
 cnt = 0
+betM = np.zeros((vertices, vertices), dtype=float)
 for node in sorted(cbc):
-    if cnt == 50:
-        break
-    print([f"{node} {cbc[node]:0.2f}"])
-    cnt += 1
+    betM[node[0]][node[1]] = cbc[node]
+    betM[node[1]][node[0]] = cbc[node]
+
+resBet = []
+for i in range(vertices):
+    for j in range(vertices):
+        if j < i:
+            continue
+        if (betM[i][j] != 0):
+            resBet.append(f"{(i, j)} {betM[i][j]:0.2f}")
+
+f = open("result.txt", "w")
+for i in range(len(resBet)):
+    f.write(resBet[i] + '\n')
+f.close()

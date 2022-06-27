@@ -173,6 +173,10 @@ for i in range(numVertices):
         id = i * neighborsPerVertex + j
         if edgeArray[id] != INF:
             if(bet[id] != 0):
-                resBet.append(f"({i}, {edgeArray[id]}) {bet[id]:0.2f}")
+                if (edgeArray[id] > i):
+                    resBet.append(f"({i}, {edgeArray[id]}) {bet[id]:0.2f}")
 
-print(resBet[:50])
+f = open("resParallel.txt", "w")
+for i in range(len(resBet)):
+    f.write(resBet[i] + '\n')
+f.close()

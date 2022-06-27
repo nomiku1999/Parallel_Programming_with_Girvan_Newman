@@ -66,4 +66,7 @@ def betweenness():
 
 betweenness()
 # bet
-print(resBet[:50])
+f = open("resSeq.txt", "w")
+for i in range(len(resBet)):
+    f.write(resBet[i] + '\n')
+f.close()
