@@ -1,9 +1,11 @@
 import numba
 import numpy as np
+import sys
+gName = sys.argv[1]
 
 INF = 123456789
 
-f = open("graph.txt", "r")
+f = open(gName, "r")
 vertices = int(f.readline())
 g_pyObj = []
 # print(vertices)
@@ -113,7 +115,7 @@ def betweenness():
 
 betweenness()
 # bet
-f = open("resSeqJit.txt", "w")
+f = open("resSeqJit_" + gName, "w")
 for i in range(len(resBet)):
     f.write(resBet[i] + '\n')
 f.close()

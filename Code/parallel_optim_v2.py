@@ -1,10 +1,12 @@
 from numba import cuda, jit, prange
 import numpy as np
 import math
+import sys
+gName = sys.argv[1]
 
 INF = -123456789
 BLOCK_SIZE = 32
-f = open("graph.txt", "r")
+f = open(gName, "r")
 numVertices = int(f.readline())
 g_adj = []
 
@@ -24,7 +26,6 @@ edgeArray.fill(INF)
 for i in range(numVertices):
     for j in range(len(g_adj[i])):
         edgeArray[i * neighborsPerVertex + j] = g_adj[i][j]
-
 
 @cuda.jit
 def levelAndParent_Kernel(parent, visited, que, newque, edgeArray, numVertices, neighborsPerVertex):
@@ -48,13 +49,10 @@ def levelAndParent_Kernel(parent, visited, que, newque, edgeArray, numVertices, 
                     else:
                         newque[visitVertice] = True
 
-
 @cuda.jit
 def putInQueue_Kernel(level, visited, que, newque, numVertices, currentLevel):
     tIdx = cuda.grid(1)
-
     if tIdx < numVertices:
-
         if que[tIdx] == True:
             level[tIdx] = currentLevel
             que[tIdx] = False
@@ -64,13 +62,10 @@ def putInQueue_Kernel(level, visited, que, newque, numVertices, currentLevel):
             que[tIdx] = True
             newque[tIdx] = False
 
-
 @cuda.jit
 def countBetweenness_Kernel(bet, point, parent, level, visited, que, edgeArray, numVertices, neighborsPerVertex, currentLevel):
     tIdx = cuda.grid(1)
-
     if tIdx < numVertices:
-
         if que[tIdx] == True:
             startEdges, endEdges = tIdx * \
                 neighborsPerVertex, (tIdx + 1) * neighborsPerVertex
@@ -89,25 +84,20 @@ def countBetweenness_Kernel(bet, point, parent, level, visited, que, edgeArray, 
                         cuda.atomic.add(bet, edge, updatePoint)
                         cuda.atomic.add(point, visitVertice, updatePoint)
 
-
 @cuda.jit
 def markVisited_Kernel(que, visited, numVertices):
     tIdx = cuda.grid(1)
-
     if tIdx < numVertices:
         if que[tIdx] == True:
             que[tIdx] = False
             visited[tIdx] = True
 
-
 @cuda.jit
 def putLowerLevel_Kernel(que, level, numVertices, currentLevel):
     tIdx = cuda.grid(1)
-
     if tIdx < numVertices:
         if level[tIdx] == currentLevel:
             que[tIdx] = True
-
 
 @cuda.jit
 def restoreToDefault_kernel(level, parent, visited, que, newque, startVertice, numVertices):
@@ -123,7 +113,6 @@ def restoreToDefault_kernel(level, parent, visited, que, newque, startVertice, n
             parent[tIdx] = 1
             que[tIdx] = True
 
-
 @cuda.jit
 def restoreVisitedAndQue_kernel(visited, que, numVertices):
     tIdx = cuda.grid(1)
@@ -131,13 +120,11 @@ def restoreVisitedAndQue_kernel(visited, que, numVertices):
         visited[tIdx] = False
         que[tIdx] = False
 
-
 @cuda.jit
 def fillPointArrWithOnes_kernel(point, numVertices):
     tIdx = cuda.grid(1)
     if tIdx < numVertices:
         point[tIdx] = 1
-
 
 @cuda.jit
 def setQueInMaxLevel_kernel(que, level, numVertices, maxLevel):
@@ -146,20 +133,15 @@ def setQueInMaxLevel_kernel(que, level, numVertices, maxLevel):
         if level[tIdx] == maxLevel[0]:
             que[tIdx] = True
 
-
 @cuda.jit
 def findMaxVal_kernel(level, maxLevel):
     tIdx = cuda.grid(1)
     cuda.atomic.max(maxLevel, 0, level[tIdx])
 
-
 bet = np.zeros(numEdges, dtype=float)
 d_bet = cuda.to_device(bet)
 d_edgeArray = cuda.to_device(edgeArray)
 
-# đưa mọi mảng này làm mảng toàn cục hết, copy vô device sử dụng luôn, ko copy ra host sau mỗi lần bfs
-# viết hàm kernel reset tất cả 5 mảng dưới về giá trị mặc định lúc khởi tạo sau mỗi lần bfs
-# --> đỡ tốn thời gian copy trong mỗi lần bfs tại 1 đỉnh
 level = np.empty(numVertices, dtype=int)
 parent = np.zeros(numVertices, dtype=float)
 visited = np.zeros(numVertices, dtype=bool)
@@ -167,8 +149,6 @@ que = np.zeros(numVertices, dtype=bool)
 newque = np.zeros(numVertices, dtype=bool)
 point = np.empty(numVertices, dtype=float)
 
-# this use pageable bandwidth, we should use pinned memory to store all of this array
-# to boost data transfer time between host and device
 d_level = cuda.to_device(level)
 d_parent = cuda.to_device(parent)
 d_visited = cuda.to_device(visited)
@@ -177,7 +157,6 @@ d_newque = cuda.to_device(newque)
 d_point = cuda.to_device(point)
 
 GRID_SIZE = int(math.ceil(numVertices / BLOCK_SIZE))
-
 
 def bfs(start):
     # write kernel to restart level, parent, visited, que, newque to default
@@ -228,7 +207,6 @@ def bfs(start):
         putLowerLevel_Kernel[GRID_SIZE, BLOCK_SIZE](
             d_que, d_level, numVertices, currentLevel2)
 
-
 for i in range(numVertices):
     bfs(i)
 
@@ -244,7 +222,7 @@ for i in range(numVertices):
                 if (edgeArray[id] > i):
                     resBet.append(f"({i}, {edgeArray[id]}) {bet[id]:0.2f}")
 
-f = open("resParallelv2.txt", "w")
+f = open("resParallelv2_" + gName, "w")
 for i in range(len(resBet)):
     f.write(resBet[i] + '\n')
 f.close()

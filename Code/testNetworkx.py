@@ -174,8 +174,10 @@ def _without_most_central_edges(G, most_valuable_edge):
     return new_components
 
 # READ FILE
+import sys
+gName = sys.argv[1]
 
-f = open("graph.txt", "r")
+f = open(gName, "r")
 vertices = int(f.readline())
 g = []
 # print(vertices)
@@ -205,7 +207,7 @@ for i in range(vertices):
         if (betM[i][j] != 0):
             resBet.append(f"{(i, j)} {betM[i][j]:0.2f}")
 
-f = open("result.txt", "w")
+f = open("result_" + gName, "w")
 for i in range(len(resBet)):
     f.write(resBet[i] + '\n')
 f.close()

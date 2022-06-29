@@ -1,10 +1,13 @@
 from numba import cuda, jit, prange
 import numpy as np
 import math
+import sys
+gName = sys.argv[1]
 
 INF = 123456789
 BLOCK_SIZE = 32
-f = open("graph.txt", "r")
+
+f = open(gName, "r")
 numVertices = int(f.readline())
 g_adj = []
 # print(vertices)
@@ -176,7 +179,7 @@ for i in range(numVertices):
                 if (edgeArray[id] > i):
                     resBet.append(f"({i}, {edgeArray[id]}) {bet[id]:0.2f}")
 
-f = open("resParallel.txt", "w")
+f = open("resParallel_" + gName, "w")
 for i in range(len(resBet)):
     f.write(resBet[i] + '\n')
 f.close()

@@ -1,6 +1,8 @@
 from queue import Queue
+import sys
+gName = sys.argv[1]
 
-f = open("graph.txt", "r")
+f = open(gName, "r")
 vertices = int(f.readline())
 g = []
 # print(vertices)
@@ -66,7 +68,7 @@ def betweenness():
 
 betweenness()
 # bet
-f = open("resSeq.txt", "w")
+f = open("resSeq_" + gName, "w")
 for i in range(len(resBet)):
     f.write(resBet[i] + '\n')
 f.close()
